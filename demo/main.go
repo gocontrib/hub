@@ -30,7 +30,7 @@ func main() {
 	}()
 
 	http.HandleFunc("/", serveHome)
-	http.HandleFunc("/ws", hub.Serve)
+	http.HandleFunc("/ws", hub.ServeHTTP)
 
 	err := http.ListenAndServe(*addr, nil)
 

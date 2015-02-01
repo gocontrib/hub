@@ -1,6 +1,7 @@
 package sock
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"sync"
@@ -88,4 +89,12 @@ func (h *Hub) Send(payload interface{}) {
 	for c := range h.connections {
 		c.send <- msg
 	}
+}
+
+func toJSON(payload interface{}) []byte {
+	var b, err = json.Marshal(payload)
+	if err != nil {
+		panic(err)
+	}
+	return b
 }
