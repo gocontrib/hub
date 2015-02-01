@@ -5,21 +5,30 @@ import (
 	"log"
 	"net/http"
 	"text/template"
+	"time"
 
-	"github.com/gocontrib/hub"
+	Hub "github.com/gocontrib/hub"
 )
 
 var addr = flag.String("addr", ":8080", "http service address")
 var homeTempl = template.Must(template.ParseFiles("home.html"))
-var h = hub.NewHub()
+var hub = Hub.NewHub()
 
 func main() {
 	flag.Parse()
 
-	go h.Run()
+	go hub.Run()
+
+	// bot
+	var stop = every(time.Second, func() {
+		hub.Send("bot message")
+	})
+	defer func() {
+		stop <- true
+	}()
 
 	http.HandleFunc("/", serveHome)
-	http.HandleFunc("/ws", h.ServeWs)
+	http.HandleFunc("/ws", hub.ServeWs)
 
 	err := http.ListenAndServe(*addr, nil)
 
@@ -39,4 +48,27 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	homeTempl.Execute(w, r.Host)
+}
+
+// Returns `chan bool` to stop the execution via: stop <- true
+func every(d time.Duration, fn func()) chan bool {
+	var stop = make(chan bool, 1)
+
+	go func() {
+		var ticker = time.NewTicker(d)
+
+		for {
+			select {
+			case <-ticker.C:
+				fn()
+
+			case <-stop:
+				ticker.Stop()
+				close(stop)
+				return
+			}
+		}
+	}()
+
+	return stop
 }
