@@ -1,5 +1,9 @@
 package hub
 
+// TODO sync connections dictionary
+// TODO rooms, i.e. namespaces
+// TODO non JSON encoder
+
 // Hub maintains the set of active connections and broadcasts messages to the connections.
 type Hub struct {
 	// Registered connections.
@@ -46,5 +50,13 @@ func (h *Hub) Run() {
 				}
 			}
 		}
+	}
+}
+
+// Send broadcast message to all connections
+func (h *Hub) Send(payload interface{}) {
+	var msg = toJSON(payload)
+	for c := range h.connections {
+		c.send <- msg
 	}
 }

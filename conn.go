@@ -1,8 +1,6 @@
 package hub
 
 import (
-	"log"
-	"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -86,22 +84,4 @@ func (c *Conn) writePump() {
 			}
 		}
 	}
-}
-
-// ServeWs handles websocket requests from the peer.
-// TODO move to hub.go or other file
-func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, "Method not allowed", 405)
-		return
-	}
-	ws, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	c := &Conn{send: make(chan []byte, 256), ws: ws, hub: hub}
-	hub.register <- c
-	go c.writePump()
-	c.readPump()
 }
