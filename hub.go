@@ -15,6 +15,7 @@ type Hub struct {
 	unregister chan *Conn
 }
 
+// NewHub creates new instance of Hub
 func NewHub() *Hub {
 	return &Hub{
 		broadcast:   make(chan []byte),
@@ -24,7 +25,8 @@ func NewHub() *Hub {
 	}
 }
 
-func (h *Hub) run() {
+// Run starts the hub.
+func (h *Hub) Run() {
 	for {
 		select {
 		case c := <-h.register:
