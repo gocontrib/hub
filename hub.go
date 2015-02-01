@@ -1,5 +1,10 @@
 package hub
 
+import (
+	"log"
+	"net/http"
+)
+
 // TODO sync connections dictionary
 // TODO rooms, i.e. namespaces
 // TODO non JSON encoder
@@ -51,6 +56,23 @@ func (h *Hub) Run() {
 			}
 		}
 	}
+}
+
+// ServeWs handles websocket requests from the peer.
+func (h *Hub) ServeWs(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", 405)
+		return
+	}
+	ws, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	c := &Conn{send: make(chan []byte, 256), ws: ws, hub: h}
+	h.register <- c
+	go c.writePump()
+	c.readPump()
 }
 
 // Send broadcast message to all connections
