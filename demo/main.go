@@ -8,12 +8,12 @@ import (
 	"text/template"
 	"time"
 
-	Hub "github.com/gocontrib/hub"
+	"github.com/gocontrib/sock"
 )
 
 var addr = flag.String("addr", ":8080", "http service address")
 var homeTempl = template.Must(template.ParseFiles("home.html"))
-var hub = Hub.NewHub()
+var hub = sock.NewHub()
 
 func main() {
 	flag.Parse()
