@@ -3,14 +3,15 @@ package hub
 import (
 	"log"
 	"net/http"
+	"sync"
 )
 
-// TODO sync connections dictionary
 // TODO rooms, i.e. namespaces
 // TODO non JSON encoder
 
 // Hub maintains the set of active connections and broadcasts messages to the connections.
 type Hub struct {
+	sync.Mutex
 	// Registered connections.
 	connections map[*Conn]bool
 
@@ -39,27 +40,33 @@ func (h *Hub) Run() {
 	for {
 		select {
 		case c := <-h.register:
+			h.Lock()
 			h.connections[c] = true
+			h.Unlock()
 		case c := <-h.unregister:
+			h.Lock()
 			if _, ok := h.connections[c]; ok {
 				delete(h.connections, c)
 				close(c.send)
 			}
+			h.Unlock()
 		case m := <-h.broadcast:
 			for c := range h.connections {
 				select {
 				case c.send <- m:
 				default:
 					close(c.send)
+					h.Lock()
 					delete(h.connections, c)
+					h.Unlock()
 				}
 			}
 		}
 	}
 }
 
-// ServeWs handles websocket requests from the peer.
-func (h *Hub) ServeWs(w http.ResponseWriter, r *http.Request) {
+// Serve handles websocket requests from the peer.
+func (h *Hub) Serve(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", 405)
 		return

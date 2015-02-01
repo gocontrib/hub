@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"text/template"
@@ -25,10 +26,11 @@ func main() {
 	})
 	defer func() {
 		stop <- true
+		fmt.Println("bot killed")
 	}()
 
 	http.HandleFunc("/", serveHome)
-	http.HandleFunc("/ws", hub.ServeWs)
+	http.HandleFunc("/ws", hub.Serve)
 
 	err := http.ListenAndServe(*addr, nil)
 
