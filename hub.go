@@ -67,7 +67,7 @@ func (h *Hub) Run() {
 }
 
 // Serve handles websocket requests from the peer.
-func (h *Hub) Serve(w http.ResponseWriter, r *http.Request) {
+func (h *Hub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", 405)
 		return
